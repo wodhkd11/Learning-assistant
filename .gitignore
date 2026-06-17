@@ -1,0 +1,19 @@
+
+.log
+.temp
+.env
+.env.example
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+!/obsidian_vault
+/obsidian_vault/*

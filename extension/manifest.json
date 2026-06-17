@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "KALF — Knowledge Collector",
+  "version": "1.0.0",
+  "description": "방문한 웹 페이지의 지식 콘텐츠를 자동 수집하여 로컬 Obsidian 볼트에 저장합니다.",
+
+  "permissions": [
+    "webNavigation",
+    "storage",
+    "scripting",
+    "alarms"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["readability.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_title": "KALF Collector"
+  }
+}

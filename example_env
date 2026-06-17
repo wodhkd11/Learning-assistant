@@ -1,0 +1,48 @@
+
+# =====================================================
+# KALF — 환경변수 설정 예시
+# 이 파일을 복사하여 .env로 저장한 뒤 값을 채워 넣는다.
+# .env는 .gitignore에 포함되어 있으므로 커밋되지 않는다.
+# =====================================================
+
+# ----- 저장소 경로 -----
+# Obsidian 볼트 절대 경로 (기본: 프로젝트 루트의 obsidian_vault/)
+VAULT_PATH=./obsidian_vault
+
+# ChromaDB 영속 경로
+CHROMA_DB_PATH=./data/chroma
+
+# 임시 파일 디렉토리 (.gitignore에 포함됨)
+TEMP_DIR=./.temp
+
+# ----- Ollama (로컬 LLM) -----
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3:8b
+# Ollama API 호출 타임아웃 (초)
+OLLAMA_TIMEOUT=10
+
+# ----- 상용 LLM API -----
+# Anthropic Claude
+ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxx
+
+# Google Gemini
+GEMINI_API_KEY=AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Groq (무료 티어, 고속 추론)
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# xAI / Grok (OpenAI 호환 API)
+XAI_API_KEY=xai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# LLM 우선순위 (콤마 구분). 앞에서부터 순서대로 시도하고 429/오류 시 다음으로 전환.
+LLM_PRIORITY=xai,groq,gemini,claude
+
+# ----- 검색 가중치 -----
+# 벡터 유사도 가중치 (0.0~1.0). 키워드 가중치 = 1 - 이 값
+HYBRID_VECTOR_WEIGHT=0.7
+
+# ----- 기타 -----
+LOG_LEVEL=INFO
+
+# MCP 서버가 FastAPI에 접근할 때 사용하는 URL
+KALF_API_URL=http://localhost:8000

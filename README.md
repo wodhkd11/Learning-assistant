@@ -1,7 +1,7 @@
 # Learning Assistant System
 
 > 웹 서핑 중 지나친 페이지까지 자동 수집·분석하여 로컬 지식 그래프를 구축하고,  
-> Claude Desktop에서 자연어로 "저번에 이거 본 적 있어?" 라고 물어볼 수 있는 개인 지식 에이전트
+> Claude Desktop에서 자연어로 "저번에 이거 본 적 있어?" 라고 물어볼 수 있는 개인 지식 에이전트 및 문서간 하이퍼링크를 통한 llm wiki
 
 **🎬 [Demo Video](https://www.youtube.com/watch?v=HGjfcvkgZx0)** · **📄 [Architecture Spec](./SPEC.md)**
 

@@ -79,7 +79,7 @@ uvicorn backend.main:app --reload
 ## 디렉토리 구조
 
 ```
-KALF/
+root/
 ├── backend/          # FastAPI 애플리케이션
 │   ├── llm/          # LLM 클라이언트 (xai/groq/gemini/claude)
 │   ├── routers/      # API 엔드포인트
@@ -117,11 +117,4 @@ python scripts/migrate_series.py
 
 ```bash
 pytest tests/ -v
-```
-
-## 트레이 앱 빌드
-
-```bash
-tray\build.bat
-# → dist\KALF.exe 생성
 ```

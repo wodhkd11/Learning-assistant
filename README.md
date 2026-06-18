@@ -2,6 +2,11 @@
 
 웹 페이지를 자동 수집하여 로컬 Obsidian 볼트에 저장하는 지식 관리 시스템.
 
+## 아키텍처
+<div>
+  <img width="6034" height="4034" alt="Image" src="https://github.com/user-attachments/assets/43da1a74-bdfa-4a02-9f72-addbcd0d7291" />
+</div>
+
 ## 구성 요소
 
 | 구성 | 설명 |

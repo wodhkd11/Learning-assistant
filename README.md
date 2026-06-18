@@ -1,60 +1,88 @@
-# Learning System
+# Learning Assistant System
 
-웹 페이지를 자동 수집하여 로컬 Obsidian 볼트에 저장하는 지식 관리 시스템.
+> 웹 서핑 중 지나친 페이지까지 자동 수집·분석하여 로컬 지식 그래프를 구축하고,  
+> Claude Desktop에서 자연어로 "저번에 이거 본 적 있어?" 라고 물어볼 수 있는 개인 지식 에이전트
 
-## 아키텍처
-<div>
-  <img width="6034" height="4034" alt="Image" src="https://github.com/user-attachments/assets/43da1a74-bdfa-4a02-9f72-addbcd0d7291" />
-</div>
+**🎬 [Demo Video](https://www.youtube.com/watch?v=HGjfcvkgZx0)** · **📄 [Architecture Spec](./SPEC.md)**
 
-## 구성 요소
+---
 
-| 구성 | 설명 |
+## Highlights
+
+| 항목 | 내용 |
 |------|------|
-| Chrome Extension | 방문 페이지 본문 자동 수집 (Readability 기반) |
-| FastAPI Backend | 수집 요청 처리, LLM 분석, 저장 |
-| Ollama | 로컬 LLM 분류기 (llama3:8b) |
-| LLM 분석 | xAI / Gemini / Groq / Claude 멀티 프로바이더 |
-| ChromaDB | 벡터 검색 및 중복 감지 |
-| Obsidian Vault | Markdown 형태로 로컬 저장 |
-| MCP Server | Claude Desktop 연동 |
-| Tray App | Windows 시스템 트레이 서버 관리 |
+|  Hybrid AI | 로컬 LLM(Ollama) 1차 필터링 → 상용 API 호출 비용 절감 |
+|  Multi-Provider Fallback | xAI → Groq → Gemini → Claude 자동 전환, 429 즉시 Fallback |
+|  MCP Integration | Claude Desktop에서 자연어로 수집된 문서 검색·대화 |
+| ️ Local-First | 원시 데이터·지식 그래프 모두 로컬 저장. 외부 서버 전송 없음 |
+|  Test Coverage | 124 passed, 0 failed (pytest) |
+|  SLA | 수집 API P99 \<100ms · MCP 검색 \<2s · 성공률 \>95% |
 
-## 빠른 시작
+---
+
+## Architecture
+다크모드 사용 시 흐릿하게 보일 수 있음
+![Architecture](https://github.com/user-attachments/assets/43da1a74-bdfa-4a02-9f72-addbcd0d7291)
+
+---
+
+## System Flow
 
 ```
-1. Ollama 설치: https://ollama.com/download
-2. python scripts/setup.py
-3. .env 파일에 API 키 입력
-4. dist/Learning.exe 실행
-4-1. uvicorn backend.main:app --reload(터미널)
+[Browser]  →  POST /api/v1/collect
+               ↓ asyncio.Queue (즉시 200 OK 반환)
+[Worker-1] →  Ollama llama3:8b  →  이진 분류 (지식 문서 여부)
+               ↓ True만 통과 / 실패 시 SQLite(.temp/) 영속화
+[Worker-2] →  LLM Orchestrator  →  요약·태깅·연관 분석
+               ↓
+[CompositeRepository]  →  Obsidian .md 저장 + ChromaDB 색인
+
+[Claude Desktop]  →  MCP Tool 호출
+                      ↓ search_vault / get_document / get_stats
+[FastAPI Search]  →  Hybrid Search (Vector×0.7 + Keyword×0.3)
+                      ↓
+[Claude Desktop]  →  수집 문서 기반 답변 생성
 ```
 
-## 상세 설치
+---
 
-### 1. 사전 요구사항
+## Tech Stack
 
-- Python 3.11 이상
-- Ollama ([다운로드](https://ollama.com/download))
-- Chrome 브라우저
+| Layer | Stack |
+|-------|-------|
+| Backend | Python 3.11 · FastAPI · uvicorn · asyncio · pydantic-settings |
+| Local LLM | Ollama · llama3:8b / phi3:mini |
+| Cloud LLM | xAI Grok-3 · Groq Llama-3.3 · Gemini 2.0 Flash · Claude 3.5 Sonnet |
+| Vector DB | ChromaDB (Persistent) · all-MiniLM-L6-v2 (로컬 임베딩) |
+| Storage | Obsidian Vault (.md) · SQLite (aiosqlite) |
+| Extension | Chrome MV3 · Readability.js |
+| MCP | Python mcp SDK · stdio transport |
+| Dev | pytest · pytest-asyncio · PyInstaller (System Tray) |
 
-### 2. 환경 초기화
+---
+
+## Quick Start
 
 ```bash
+# 1. Ollama 설치
+# https://ollama.com/download
+
+# 2. 환경 초기화 (패키지 설치 + 모델 다운로드 + .env 생성)
 python scripts/setup.py
+
+# 3. API 키 입력
+# .env 파일에서 사용할 LLM 키 설정
+LLM_PRIORITY=xai,gemini,groq,claude
+
+# 4. 서버 실행
+uvicorn backend.main:app --reload
+# 또는 dist/Learning.exe → 트레이 우클릭 → 서버 시작
+
+# 5. Chrome Extension
+# chrome://extensions/ → 개발자 모드 ON → extension/ 폴더 로드
 ```
 
-초기화 스크립트가 자동으로 수행하는 작업:
-
-- `requirements.txt` 패키지 설치
-- Ollama 설치 확인
-- `llama3:8b` 모델 자동 다운로드
-- `.env` 파일 생성 (`.env.example` 복사)
-- 필수 디렉토리 생성 (`obsidian_vault/`, `.temp/`, `data/chroma/`)
-
-### 3. API 키 설정
-
-`.env` 파일을 열어 사용할 LLM 키를 입력한다.
+### API Keys (.env)
 
 ```env
 ANTHROPIC_API_KEY=sk-ant-...
@@ -64,57 +92,59 @@ GROQ_API_KEY=gsk_...
 LLM_PRIORITY=xai,gemini,groq,claude
 ```
 
-### 4. 서버 실행
+### Claude Desktop MCP 연결
 
-```bash
-uvicorn backend.main:app --reload
-# 또는 트레이 앱: dist\Learning.exe 실행 후 트래이 우클릭 후 서버 실행
+```json
+// ~/AppData/Local/Packages/Claude_.../LocalCache/Roaming/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "Learning": {
+      "command": "C:\\...\\python.exe",
+      "args": ["C:\\...\\Learning-assistant\\mcp_server\\server.py"],
+      "env": { "KALF_API_URL": "http://localhost:8000" }
+    }
+  }
+}
 ```
 
-### 5. Chrome Extension 설치
+---
 
-1. `chrome://extensions/` → 개발자 모드 ON
-2. "압축해제된 확장 프로그램 로드" → `extension/` 폴더 선택
-
-## 디렉토리 구조
+## Project Structure
 
 ```
 root/
-├── backend/          # FastAPI 애플리케이션
-│   ├── llm/          # LLM 클라이언트 (xai/groq/gemini/claude)
-│   ├── routers/      # API 엔드포인트
-│   ├── storage/      # ChromaDB + Obsidian 저장소
-│   ├── utils/        # series_detector 등 유틸리티
-│   └── workers/      # classifier, analyzer 워커
+├── backend/
+│   ├── llm/          # LLM Factory (xAI / Groq / Gemini / Claude)
+│   ├── routers/      # collect · search API
+│   ├── storage/      # CompositeRepository · ObsidianRepo · ChromaRepo
+│   ├── temp/         # SQLite 영속 큐 (failed_tasks.db)
+│   ├── utils/        # series_detector · paper_detector
+│   └── workers/      # classifier (Ollama) · analyzer (LLM)
 ├── extension/        # Chrome Extension MV3
 ├── mcp_server/       # Claude Desktop MCP 서버
-├── scripts/          # 관리 스크립트
-│   ├── setup.py      # 초기화 스크립트
-│   ├── migrate_series.py
-│   └── index_vault.py
-├── tests/            # pytest 테스트
-├── tray/             # Windows 시스템 트레이 앱
-└── obsidian_vault/   # 저장된 Markdown 파일
+├── scripts/
+│   ├── setup.py          # 초기화
+│   ├── index_vault.py    # 기존 볼트 일괄 색인
+│   └── migrate_series.py # 시리즈별 디렉토리 재구성
+├── tests/            # 124 passed
+├── tray/             # Windows System Tray App
+└── obsidian_vault/   # 수집된 Markdown 파일
 ```
 
-## 기존 볼트 색인
+---
 
-이미 Obsidian 볼트가 있다면 ChromaDB에 색인한다.
+## Scripts
 
 ```bash
+# 기존 볼트 ChromaDB 색인
 python scripts/index_vault.py
-```
 
-## 시리즈 마이그레이션
-
-기존 파일을 시리즈별 디렉토리로 재구성한다.
-
-```bash
+# 시리즈별 디렉토리 재구성
 python scripts/migrate_series.py
-```
 
-## 테스트
-
-```bash
+# 테스트
 pytest tests/ -v
+
+# 트레이 앱 빌드
+tray\build.bat   # → dist\Learning.exe
 ```
